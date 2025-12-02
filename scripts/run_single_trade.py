@@ -10,7 +10,7 @@ import tempfile
 import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Tuple
 
 import numpy as np
 
@@ -149,6 +149,28 @@ def _read_bmp_rgb(bmp_path: Path) -> np.ndarray:
     return rgb.astype(np.uint8)
 
 
+def rgb_to_ycbcr(image: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    image = image.astype(np.float64)
+    r = image[:, :, 0]
+    g = image[:, :, 1]
+    b = image[:, :, 2]
+    y = 0.299 * r + 0.587 * g + 0.114 * b
+    cb = -0.168736 * r - 0.331264 * g + 0.5 * b + 128.0
+    cr = 0.5 * r - 0.418688 * g - 0.081312 * b + 128.0
+    return y.round().astype(np.uint8), cb, cr
+
+
+def ycbcr_to_rgb(y: np.ndarray, cb: np.ndarray, cr: np.ndarray) -> np.ndarray:
+    y = y.astype(np.float64)
+    cb_shift = cb - 128.0
+    cr_shift = cr - 128.0
+    r = y + 1.402 * cr_shift
+    g = y - 0.344136 * cb_shift - 0.714136 * cr_shift
+    b = y + 1.772 * cb_shift
+    rgb = np.stack([r, g, b], axis=-1)
+    return np.clip(rgb, 0, 255).round().astype(np.uint8)
+
+
 def _write_raw_image(array: np.ndarray, path: Path) -> None:
     """根据通道数输出 P5(PGM) 或 P6(PPM)。"""
     if array.dtype != np.uint8:
@@ -213,7 +235,13 @@ def prompt_positive_int(message: str, default: int, allow_zero: bool = False) ->
         return value
 
 
-def run_single_trade(image: np.ndarray, fingerprint_length: int, rng: np.random.Generator, output_path: Path) -> Dict[str, float]:
+def run_single_trade(
+    image: np.ndarray,
+    fingerprint_length: int,
+    rng: np.random.Generator,
+    output_path: Path,
+    chroma: Tuple[np.ndarray, np.ndarray] | None = None,
+) -> Dict[str, float]:
     """串联一次完整交易流程并返回指标。"""
 
     chain = MockEthChainAPI()
@@ -275,7 +303,11 @@ def run_single_trade(image: np.ndarray, fingerprint_length: int, rng: np.random.
         media_package.positions,
         media_package.bundle,
     )
-    save_image(recovered_image, output_path)
+    if chroma is not None:
+        color_image = ycbcr_to_rgb(recovered_image, chroma[0], chroma[1])
+        save_image(color_image, output_path)
+    else:
+        save_image(recovered_image, output_path)
     t7 = time.perf_counter()
 
     t8 = time.perf_counter()
@@ -336,8 +368,15 @@ def main() -> None:
         raise ValueError("fingerprint-length must be > 0")
     if fprint_len is None:
         fprint_len = prompt_positive_int("请输入指纹比特长度", DEFAULT_FINGERPRINT_LEN)
-    image = load_input_image(image_path, resize_to)
-    metrics = run_single_trade(image, fprint_len, rng, Path(args.output))
+    image_rgb = load_input_image(image_path, resize_to)
+    if image_rgb.ndim == 3:
+        y_channel, cb_channel, cr_channel = rgb_to_ycbcr(image_rgb)
+        chroma = (cb_channel, cr_channel)
+        image_input = y_channel
+    else:
+        image_input = image_rgb
+        chroma = None
+    metrics = run_single_trade(image_input, fprint_len, rng, Path(args.output), chroma=chroma)
     print("Single trade metrics:")
     time_keys = {
         "owner_encrypt_media",

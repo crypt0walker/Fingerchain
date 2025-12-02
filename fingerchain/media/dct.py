@@ -10,25 +10,40 @@ import numpy as np
 BLOCK_SIZE = 8  # 论文采用 8x8 DCT，这里固定块尺寸
 FREQ_MIN_SUM = 4  # 仅在 u+v >= 4 的系数上嵌入，避免低频
 
-_u = np.arange(BLOCK_SIZE)[:, None]
-_x = np.arange(BLOCK_SIZE)[None, :]
-_alpha = np.array([1 / math.sqrt(2.0)] + [1.0] * (BLOCK_SIZE - 1))
-_COS_TABLE = np.cos((math.pi * (2 * _x + 1) * _u) / (2 * BLOCK_SIZE))
-_DCT_MATRIX = 0.5 * (_alpha[:, None] * _COS_TABLE)
+_ALPHA_CACHE = np.array([1 / math.sqrt(2.0)] + [1.0] * (BLOCK_SIZE - 1))
 
 
 def _block_dct(block: np.ndarray) -> np.ndarray:
-    """对单个 8x8 块执行 DCT，使用矩阵乘法加速。"""
+    """对单个 8x8 块执行 DCT，采用与论文一致的朴素实现。"""
     block = block.astype(np.float64) - 128.0
-    temp = np.einsum("ij,jk->ik", _DCT_MATRIX, block)
-    return np.einsum("ij,jk->ik", temp, _DCT_MATRIX.T)
+    result = np.zeros((BLOCK_SIZE, BLOCK_SIZE), dtype=np.float64)
+    for u in range(BLOCK_SIZE):
+        alpha_u = _ALPHA_CACHE[u]
+        for v in range(BLOCK_SIZE):
+            alpha_v = _ALPHA_CACHE[v]
+            sum_val = 0.0
+            for x in range(BLOCK_SIZE):
+                cu = math.cos((2 * x + 1) * u * math.pi / (2 * BLOCK_SIZE))
+                for y in range(BLOCK_SIZE):
+                    sum_val += block[x, y] * cu * math.cos((2 * y + 1) * v * math.pi / (2 * BLOCK_SIZE))
+            result[u, v] = 0.25 * alpha_u * alpha_v * sum_val
+    return result
 
 
 def _block_idct(coeffs: np.ndarray) -> np.ndarray:
-    """执行 IDCT，生成的像素值裁剪到 [0,255]。"""
-    temp = np.einsum("ij,jk->ik", _DCT_MATRIX.T, coeffs)
-    block = np.einsum("ij,jk->ik", temp, _DCT_MATRIX) + 128.0
-    return np.clip(block, 0, 255)
+    """执行 IDCT 的朴素实现，生成的像素值裁剪到 [0,255]。"""
+    result = np.zeros((BLOCK_SIZE, BLOCK_SIZE), dtype=np.float64)
+    for x in range(BLOCK_SIZE):
+        for y in range(BLOCK_SIZE):
+            sum_val = 0.0
+            for u in range(BLOCK_SIZE):
+                alpha_u = _ALPHA_CACHE[u]
+                cu = math.cos((2 * x + 1) * u * math.pi / (2 * BLOCK_SIZE))
+                for v in range(BLOCK_SIZE):
+                    alpha_v = _ALPHA_CACHE[v]
+                    sum_val += alpha_u * alpha_v * coeffs[u, v] * cu * math.cos((2 * y + 1) * v * math.pi / (2 * BLOCK_SIZE))
+            result[x, y] = 0.25 * sum_val + 128.0
+    return np.clip(result, 0, 255)
 
 
 @dataclass
