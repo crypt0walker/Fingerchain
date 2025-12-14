@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="480">
+<rect x="0" y="0" width="800" height="480" fill="white" stroke="none"/>
+<text x="400.0" y="20" text-anchor="middle" font-size="14" font-family="Arial">Single Share (baseline K)</text>
+<line x1="70" y1="40" x2="70" y2="420" stroke="black"/>
+<line x1="70" y1="420" x2="770" y2="420" stroke="black"/>
+<line x1="70.0" y1="420" x2="70.0" y2="425" stroke="black"/>
+<text x="70.0" y="440" text-anchor="middle" font-size="10" font-family="Arial">512</text>
+<line x1="245.0" y1="420" x2="245.0" y2="425" stroke="black"/>
+<text x="245.0" y="440" text-anchor="middle" font-size="10" font-family="Arial">2944</text>
+<line x1="420.0" y1="420" x2="420.0" y2="425" stroke="black"/>
+<text x="420.0" y="440" text-anchor="middle" font-size="10" font-family="Arial">5376</text>
+<line x1="595.0" y1="420" x2="595.0" y2="425" stroke="black"/>
+<text x="595.0" y="440" text-anchor="middle" font-size="10" font-family="Arial">7808</text>
+<line x1="770.0" y1="420" x2="770.0" y2="425" stroke="black"/>
+<text x="770.0" y="440" text-anchor="middle" font-size="10" font-family="Arial">10240</text>
+<text x="420.0" y="470" text-anchor="middle" font-size="12" font-family="Arial">edge (px)</text>
+<line x1="65" y1="420.0" x2="70" y2="420.0" stroke="black"/>
+<text x="60" y="423.0" text-anchor="end" font-size="10" font-family="Arial">0</text>
+<line x1="70" y1="420.0" x2="770" y2="420.0" stroke="#e0e0e0" />
+<line x1="65" y1="325.0" x2="70" y2="325.0" stroke="black"/>
+<text x="60" y="328.0" text-anchor="end" font-size="10" font-family="Arial">526745</text>
+<line x1="70" y1="325.0" x2="770" y2="325.0" stroke="#e0e0e0" />
+<line x1="65" y1="230.0" x2="70" y2="230.0" stroke="black"/>
+<text x="60" y="233.0" text-anchor="end" font-size="10" font-family="Arial">1053490</text>
+<line x1="70" y1="230.0" x2="770" y2="230.0" stroke="#e0e0e0" />
+<line x1="65" y1="135.0" x2="70" y2="135.0" stroke="black"/>
+<text x="60" y="138.0" text-anchor="end" font-size="10" font-family="Arial">1580234</text>
+<line x1="70" y1="135.0" x2="770" y2="135.0" stroke="#e0e0e0" />
+<line x1="65" y1="40.0" x2="70" y2="40.0" stroke="black"/>
+<text x="60" y="43.0" text-anchor="end" font-size="10" font-family="Arial">2106979</text>
+<line x1="70" y1="40.0" x2="770" y2="40.0" stroke="#e0e0e0" />
+<text x="20" y="230.0" transform="rotate(-90 20 230.0)" text-anchor="middle" font-size="12" font-family="Arial">time (ms)</text>
+<path d="M 70.00 411.00 L 88.42 409.92 L 106.84 408.42 L 143.68 404.00 L 180.53 398.53 L 254.21 381.16 L 327.89 359.62 L 475.26 291.67 L 622.63 192.75 L 770.00 86.86" fill="none" stroke="#1f77b4" stroke-width="2"/>
+<circle cx="70.00" cy="411.00" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
+<circle cx="88.42" cy="409.92" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
+<circle cx="106.84" cy="408.42" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
+<circle cx="143.68" cy="404.00" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
+<circle cx="180.53" cy="398.53" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
+<circle cx="254.21" cy="381.16" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
+<circle cx="327.89" cy="359.62" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
+<circle cx="475.26" cy="291.67" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
+<circle cx="622.63" cy="192.75" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
+<circle cx="770.00" cy="86.86" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
+<path d="M 70.00 420.00 L 88.42 420.00 L 106.84 420.00 L 143.68 420.00 L 180.53 420.00 L 254.21 420.00 L 327.89 420.00 L 475.26 420.00 L 622.63 420.00 L 770.00 420.00" fill="none" stroke="#ff7f0e" stroke-width="2"/>
+<circle cx="70.00" cy="420.00" r="3" fill="#ff7f0e" stroke="white" stroke-width="1"/>
+<circle cx="88.42" cy="420.00" r="3" fill="#ff7f0e" stroke="white" stroke-width="1"/>
+<circle cx="106.84" cy="420.00" r="3" fill="#ff7f0e" stroke="white" stroke-width="1"/>
+<circle cx="143.68" cy="420.00" r="3" fill="#ff7f0e" stroke="white" stroke-width="1"/>
+<circle cx="180.53" cy="420.00" r="3" fill="#ff7f0e" stroke="white" stroke-width="1"/>
+<circle cx="254.21" cy="420.00" r="3" fill="#ff7f0e" stroke="white" stroke-width="1"/>
+<circle cx="327.89" cy="420.00" r="3" fill="#ff7f0e" stroke="white" stroke-width="1"/>
+<circle cx="475.26" cy="420.00" r="3" fill="#ff7f0e" stroke="white" stroke-width="1"/>
+<circle cx="622.63" cy="420.00" r="3" fill="#ff7f0e" stroke="white" stroke-width="1"/>
+<circle cx="770.00" cy="420.00" r="3" fill="#ff7f0e" stroke="white" stroke-width="1"/>
+<path d="M 70.00 416.91 L 88.42 415.83 L 106.84 414.29 L 143.68 409.54 L 180.53 403.01 L 254.21 384.62 L 327.89 355.15 L 475.26 283.04 L 622.63 171.96 L 770.00 40.00" fill="none" stroke="#2ca02c" stroke-width="2"/>
+<circle cx="70.00" cy="416.91" r="3" fill="#2ca02c" stroke="white" stroke-width="1"/>
+<circle cx="88.42" cy="415.83" r="3" fill="#2ca02c" stroke="white" stroke-width="1"/>
+<circle cx="106.84" cy="414.29" r="3" fill="#2ca02c" stroke="white" stroke-width="1"/>
+<circle cx="143.68" cy="409.54" r="3" fill="#2ca02c" stroke="white" stroke-width="1"/>
+<circle cx="180.53" cy="403.01" r="3" fill="#2ca02c" stroke="white" stroke-width="1"/>
+<circle cx="254.21" cy="384.62" r="3" fill="#2ca02c" stroke="white" stroke-width="1"/>
+<circle cx="327.89" cy="355.15" r="3" fill="#2ca02c" stroke="white" stroke-width="1"/>
+<circle cx="475.26" cy="283.04" r="3" fill="#2ca02c" stroke="white" stroke-width="1"/>
+<circle cx="622.63" cy="171.96" r="3" fill="#2ca02c" stroke="white" stroke-width="1"/>
+<circle cx="770.00" cy="40.00" r="3" fill="#2ca02c" stroke="white" stroke-width="1"/>
+<rect x="650" y="42" width="12" height="12" fill="#1f77b4" />
+<text x="668" y="52" font-size="10" font-family="Arial">CP (ms)</text>
+<rect x="650" y="60" width="12" height="12" fill="#ff7f0e" />
+<text x="668" y="70" font-size="10" font-family="Arial">Cloud (ms)</text>
+<rect x="650" y="78" width="12" height="12" fill="#2ca02c" />
+<text x="668" y="88" font-size="10" font-family="Arial">Buyer (ms)</text>
+</svg>
