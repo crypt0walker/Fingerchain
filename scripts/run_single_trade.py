@@ -32,13 +32,17 @@ from fingerchain.fp.lut_scheme import (
     user_prepare_registration,
     user_recover_image,
 )
+from fingerchain.media.dct import image_to_coeff_bundle
 
-DEFAULT_IMAGE_SIZE = 256
-DEFAULT_FINGERPRINT_LEN = 128
-LUT_LEN = 1_000
+DEFAULT_IMAGE_SIZE = 512
+DEFAULT_FINGERPRINT_LEN = 50
+LUT_LEN = 1_000  # 固定长度，贴近原文口径
+# 论文中给的是方差 σ_E=10^6，因此标准差为 10^3；这里按 N(0, std^2) 采样
 SIGMA_E = 1e3
-SIGMA_W = 0.1
-FANOUT_S = 2
+# 论文参数设置 σ_W=0.6（用于 w=σ_W(2b-1) 的幅度）
+SIGMA_W = 0.6
+# 论文参数 S=3（每个系数位置累加 3 个 LUT 元素）
+FANOUT_S = 3
 KEY_BITS = 1024
 DEFAULT_IMAGE = REPO_ROOT / "Lenna.jpg"
 
@@ -150,6 +154,7 @@ def _read_bmp_rgb(bmp_path: Path) -> np.ndarray:
 
 
 def rgb_to_ycbcr(image: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """RGB 转 YCbCr，Y 通道用于嵌入，Cb/Cr 保留。"""
     image = image.astype(np.float64)
     r = image[:, :, 0]
     g = image[:, :, 1]
@@ -161,6 +166,7 @@ def rgb_to_ycbcr(image: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]
 
 
 def ycbcr_to_rgb(y: np.ndarray, cb: np.ndarray, cr: np.ndarray) -> np.ndarray:
+    """YCbCr 转回 RGB。"""
     y = y.astype(np.float64)
     cb_shift = cb - 128.0
     cr_shift = cr - 128.0
@@ -241,6 +247,7 @@ def run_single_trade(
     rng: np.random.Generator,
     output_path: Path,
     chroma: Tuple[np.ndarray, np.ndarray] | None = None,
+    reference_rgb: np.ndarray | None = None,
 ) -> Dict[str, float]:
     """串联一次完整交易流程并返回指标。"""
 
@@ -269,15 +276,23 @@ def run_single_trade(
         }
     )
 
+    lut_len = LUT_LEN
+    print(f"[owner] LUT length selected: {lut_len}")
+
     t_elut0 = time.perf_counter()
-    e_lut = generate_e_lut(LUT_LEN, SIGMA_E, rng)
+    e_lut = generate_e_lut(lut_len, SIGMA_E, rng)
     t_elut1 = time.perf_counter()
     print(f"[owner] E-LUT generation time: {t_elut1 - t_elut0:.6f}s")
-    g_matrix = generate_g_matrix(LUT_LEN, fingerprint_length, rng)
+    g_matrix = generate_g_matrix(lut_len, fingerprint_length, rng)
     session_seed = rng.bytes(16)  # 控制 B_m 采样
 
     t0 = time.perf_counter()
-    media_result: MediaEncryptionResult = owner_encrypt_media(image, e_lut, session_seed, FANOUT_S)
+    media_result: MediaEncryptionResult = owner_encrypt_media(
+        image,
+        e_lut,
+        session_seed,
+        FANOUT_S,
+    )
     t_pack0 = time.perf_counter()
     media_package = media_result.to_share_package()
     owner_media_payload = media_package.encrypted_coeffs.nbytes + media_package.positions.nbytes
@@ -307,6 +322,7 @@ def run_single_trade(
         color_image = ycbcr_to_rgb(recovered_image, chroma[0], chroma[1])
         save_image(color_image, output_path)
     else:
+        color_image = recovered_image
         save_image(recovered_image, output_path)
     t7 = time.perf_counter()
 
@@ -327,13 +343,14 @@ def run_single_trade(
         f"[owner] O6_pack_and_send (total payload incl. D-LUT): {total_payload_bytes} bytes"
     )
 
+    psnr_base = reference_rgb if reference_rgb is not None else image
     metrics = SingleTradeMetrics(
         owner_encrypt_media=t1 - t0,
         owner_compute_d_lut=t3 - t2,
         user_decrypt_d_lut=t5 - t4,
         user_recover_image=t7 - t6,
         mock_share_tx=t9 - t8,
-        psnr=_psnr(image, recovered_image),
+        psnr=_psnr(psnr_base, color_image),
         payload_bytes_owner_to_user=dlut_payload_bytes,
         encrypted_media_bytes=media_result.encrypted_coeffs.astype(np.float64).nbytes,
         watermarked_output=str(output_path),
@@ -371,12 +388,14 @@ def main() -> None:
     image_rgb = load_input_image(image_path, resize_to)
     if image_rgb.ndim == 3:
         y_channel, cb_channel, cr_channel = rgb_to_ycbcr(image_rgb)
-        chroma = (cb_channel, cr_channel)
         image_input = y_channel
+        chroma = (cb_channel, cr_channel)
+        reference_rgb = image_rgb
     else:
         image_input = image_rgb
         chroma = None
-    metrics = run_single_trade(image_input, fprint_len, rng, Path(args.output), chroma=chroma)
+        reference_rgb = image_rgb
+    metrics = run_single_trade(image_input, fprint_len, rng, Path(args.output), chroma=chroma, reference_rgb=reference_rgb)
     print("Single trade metrics:")
     time_keys = {
         "owner_encrypt_media",

@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="480">
+<rect x="0" y="0" width="800" height="480" fill="white" stroke="none"/>
+<text x="400.0" y="20" text-anchor="middle" font-size="14" font-family="Arial">Multi-share avg (CP, OpenCV)</text>
+<line x1="70" y1="40" x2="70" y2="420" stroke="black"/>
+<line x1="70" y1="420" x2="770" y2="420" stroke="black"/>
+<line x1="70.0" y1="420" x2="70.0" y2="425" stroke="black"/>
+<text x="70.0" y="440" text-anchor="middle" font-size="10" font-family="Arial">1</text>
+<line x1="245.0" y1="420" x2="245.0" y2="425" stroke="black"/>
+<text x="245.0" y="440" text-anchor="middle" font-size="10" font-family="Arial">12</text>
+<line x1="420.0" y1="420" x2="420.0" y2="425" stroke="black"/>
+<text x="420.0" y="440" text-anchor="middle" font-size="10" font-family="Arial">24</text>
+<line x1="595.0" y1="420" x2="595.0" y2="425" stroke="black"/>
+<text x="595.0" y="440" text-anchor="middle" font-size="10" font-family="Arial">35</text>
+<line x1="770.0" y1="420" x2="770.0" y2="425" stroke="black"/>
+<text x="770.0" y="440" text-anchor="middle" font-size="10" font-family="Arial">46</text>
+<text x="420.0" y="470" text-anchor="middle" font-size="12" font-family="Arial">users</text>
+<line x1="65" y1="420.0" x2="70" y2="420.0" stroke="black"/>
+<text x="60" y="423.0" text-anchor="end" font-size="10" font-family="Arial">48450</text>
+<line x1="70" y1="420.0" x2="770" y2="420.0" stroke="#e0e0e0" />
+<line x1="65" y1="325.0" x2="70" y2="325.0" stroke="black"/>
+<text x="60" y="328.0" text-anchor="end" font-size="10" font-family="Arial">241475</text>
+<line x1="70" y1="325.0" x2="770" y2="325.0" stroke="#e0e0e0" />
+<line x1="65" y1="230.0" x2="70" y2="230.0" stroke="black"/>
+<text x="60" y="233.0" text-anchor="end" font-size="10" font-family="Arial">434499</text>
+<line x1="70" y1="230.0" x2="770" y2="230.0" stroke="#e0e0e0" />
+<line x1="65" y1="135.00000000000006" x2="70" y2="135.00000000000006" stroke="black"/>
+<text x="60" y="138.00000000000006" text-anchor="end" font-size="10" font-family="Arial">627524</text>
+<line x1="70" y1="135.00000000000006" x2="770" y2="135.00000000000006" stroke="#e0e0e0" />
+<line x1="65" y1="40.0" x2="70" y2="40.0" stroke="black"/>
+<text x="60" y="43.0" text-anchor="end" font-size="10" font-family="Arial">820549</text>
+<line x1="70" y1="40.0" x2="770" y2="40.0" stroke="#e0e0e0" />
+<text x="20" y="230.0" transform="rotate(-90 20 230.0)" text-anchor="middle" font-size="12" font-family="Arial">CP time (ms)</text>
+<path d="M 70.00 419.98 L 147.78 420.00 L 225.56 420.00 L 303.33 420.00 L 381.11 420.00 L 458.89 420.00 L 536.67 420.00 L 614.44 420.00 L 692.22 420.00 L 770.00 420.00" fill="none" stroke="#1f77b4" stroke-width="2"/>
+<circle cx="70.00" cy="419.98" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
+<circle cx="147.78" cy="420.00" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
+<circle cx="225.56" cy="420.00" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
+<circle cx="303.33" cy="420.00" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
+<circle cx="381.11" cy="420.00" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
+<circle cx="458.89" cy="420.00" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
+<circle cx="536.67" cy="420.00" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
+<circle cx="614.44" cy="420.00" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
+<circle cx="692.22" cy="420.00" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
+<circle cx="770.00" cy="420.00" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
+<path d="M 70.00 326.34 L 147.78 327.34 L 225.56 327.43 L 303.33 327.46 L 381.11 327.48 L 458.89 327.49 L 536.67 327.50 L 614.44 327.50 L 692.22 327.51 L 770.00 327.51" fill="none" stroke="#ff7f0e" stroke-width="2"/>
+<circle cx="70.00" cy="326.34" r="3" fill="#ff7f0e" stroke="white" stroke-width="1"/>
+<circle cx="147.78" cy="327.34" r="3" fill="#ff7f0e" stroke="white" stroke-width="1"/>
+<circle cx="225.56" cy="327.43" r="3" fill="#ff7f0e" stroke="white" stroke-width="1"/>
+<circle cx="303.33" cy="327.46" r="3" fill="#ff7f0e" stroke="white" stroke-width="1"/>
+<circle cx="381.11" cy="327.48" r="3" fill="#ff7f0e" stroke="white" stroke-width="1"/>
+<circle cx="458.89" cy="327.49" r="3" fill="#ff7f0e" stroke="white" stroke-width="1"/>
+<circle cx="536.67" cy="327.50" r="3" fill="#ff7f0e" stroke="white" stroke-width="1"/>
+<circle cx="614.44" cy="327.50" r="3" fill="#ff7f0e" stroke="white" stroke-width="1"/>
+<circle cx="692.22" cy="327.51" r="3" fill="#ff7f0e" stroke="white" stroke-width="1"/>
+<circle cx="770.00" cy="327.51" r="3" fill="#ff7f0e" stroke="white" stroke-width="1"/>
+<path d="M 70.00 40.00 L 147.78 43.82 L 225.56 44.17 L 303.33 44.30 L 381.11 44.37 L 458.89 44.41 L 536.67 44.44 L 614.44 44.46 L 692.22 44.48 L 770.00 44.49" fill="none" stroke="#2ca02c" stroke-width="2"/>
+<circle cx="70.00" cy="40.00" r="3" fill="#2ca02c" stroke="white" stroke-width="1"/>
+<circle cx="147.78" cy="43.82" r="3" fill="#2ca02c" stroke="white" stroke-width="1"/>
+<circle cx="225.56" cy="44.17" r="3" fill="#2ca02c" stroke="white" stroke-width="1"/>
+<circle cx="303.33" cy="44.30" r="3" fill="#2ca02c" stroke="white" stroke-width="1"/>
+<circle cx="381.11" cy="44.37" r="3" fill="#2ca02c" stroke="white" stroke-width="1"/>
+<circle cx="458.89" cy="44.41" r="3" fill="#2ca02c" stroke="white" stroke-width="1"/>
+<circle cx="536.67" cy="44.44" r="3" fill="#2ca02c" stroke="white" stroke-width="1"/>
+<circle cx="614.44" cy="44.46" r="3" fill="#2ca02c" stroke="white" stroke-width="1"/>
+<circle cx="692.22" cy="44.48" r="3" fill="#2ca02c" stroke="white" stroke-width="1"/>
+<circle cx="770.00" cy="44.49" r="3" fill="#2ca02c" stroke="white" stroke-width="1"/>
+<rect x="650" y="42" width="12" height="12" fill="#1f77b4" />
+<text x="668" y="52" font-size="10" font-family="Arial">edge=1024</text>
+<rect x="650" y="60" width="12" height="12" fill="#ff7f0e" />
+<text x="668" y="70" font-size="10" font-family="Arial">edge=8192</text>
+<rect x="650" y="78" width="12" height="12" fill="#2ca02c" />
+<text x="668" y="88" font-size="10" font-family="Arial">edge=16384</text>
+</svg>

@@ -2,18 +2,50 @@
 from __future__ import annotations
 
 import math
+import os
 from dataclasses import dataclass
 from typing import List, Tuple
 
 import numpy as np
+try:
+    import cv2
+
+    _HAS_CV2 = True
+except Exception:
+    cv2 = None
+    _HAS_CV2 = False
 
 BLOCK_SIZE = 8  # 论文采用 8x8 DCT，这里固定块尺寸
 FREQ_MIN_SUM = 4  # 仅在 u+v >= 4 的系数上嵌入，避免低频
 
 _ALPHA_CACHE = np.array([1 / math.sqrt(2.0)] + [1.0] * (BLOCK_SIZE - 1))
+_COS_XU = np.zeros((BLOCK_SIZE, BLOCK_SIZE), dtype=np.float64)
+_COS_YV = np.zeros((BLOCK_SIZE, BLOCK_SIZE), dtype=np.float64)
+for _x in range(BLOCK_SIZE):
+    for _u in range(BLOCK_SIZE):
+        _COS_XU[_x, _u] = math.cos((2 * _x + 1) * _u * math.pi / (2 * BLOCK_SIZE))
+for _y in range(BLOCK_SIZE):
+    for _v in range(BLOCK_SIZE):
+        _COS_YV[_y, _v] = math.cos((2 * _y + 1) * _v * math.pi / (2 * BLOCK_SIZE))
+# IDCT 常用的组合项：alpha(u)*cos(x,u)、alpha(v)*cos(y,v)
+_AXU = _COS_XU * _ALPHA_CACHE[None, :]
+_AYV = _COS_YV * _ALPHA_CACHE[None, :]
 
 
-def _block_dct(block: np.ndarray) -> np.ndarray:
+def _dct_matrix() -> np.ndarray:
+    """预计算 8x8 DCT 变换矩阵，便于 NumPy 矩阵乘法加速。"""
+    mat = np.zeros((BLOCK_SIZE, BLOCK_SIZE), dtype=np.float64)
+    for u in range(BLOCK_SIZE):
+        alpha_u = _ALPHA_CACHE[u]
+        for x in range(BLOCK_SIZE):
+            mat[u, x] = 0.5 * alpha_u * math.cos((2 * x + 1) * u * math.pi / (2 * BLOCK_SIZE))
+    return mat
+
+
+_DCT_MAT = _dct_matrix()
+
+
+def _block_dct_naive(block: np.ndarray) -> np.ndarray:
     """对单个 8x8 块执行 DCT，采用与论文一致的朴素实现。"""
     block = block.astype(np.float64) - 128.0
     result = np.zeros((BLOCK_SIZE, BLOCK_SIZE), dtype=np.float64)
@@ -23,27 +55,77 @@ def _block_dct(block: np.ndarray) -> np.ndarray:
             alpha_v = _ALPHA_CACHE[v]
             sum_val = 0.0
             for x in range(BLOCK_SIZE):
-                cu = math.cos((2 * x + 1) * u * math.pi / (2 * BLOCK_SIZE))
+                cu = _COS_XU[x, u]
                 for y in range(BLOCK_SIZE):
-                    sum_val += block[x, y] * cu * math.cos((2 * y + 1) * v * math.pi / (2 * BLOCK_SIZE))
+                    sum_val += block[x, y] * cu * _COS_YV[y, v]
             result[u, v] = 0.25 * alpha_u * alpha_v * sum_val
     return result
 
 
-def _block_idct(coeffs: np.ndarray) -> np.ndarray:
+def _block_idct_naive(coeffs: np.ndarray) -> np.ndarray:
     """执行 IDCT 的朴素实现，生成的像素值裁剪到 [0,255]。"""
     result = np.zeros((BLOCK_SIZE, BLOCK_SIZE), dtype=np.float64)
     for x in range(BLOCK_SIZE):
         for y in range(BLOCK_SIZE):
             sum_val = 0.0
             for u in range(BLOCK_SIZE):
-                alpha_u = _ALPHA_CACHE[u]
-                cu = math.cos((2 * x + 1) * u * math.pi / (2 * BLOCK_SIZE))
+                axu = _AXU[x, u]
                 for v in range(BLOCK_SIZE):
-                    alpha_v = _ALPHA_CACHE[v]
-                    sum_val += alpha_u * alpha_v * coeffs[u, v] * cu * math.cos((2 * y + 1) * v * math.pi / (2 * BLOCK_SIZE))
+                    sum_val += coeffs[u, v] * axu * _AYV[y, v]
             result[x, y] = 0.25 * sum_val + 128.0
     return np.clip(result, 0, 255)
+
+
+def _block_dct_numpy(block: np.ndarray) -> np.ndarray:
+    """NumPy 矩阵版 DCT，数值与朴素实现一致，常数更低。"""
+    block_f = block.astype(np.float64) - 128.0
+    return _DCT_MAT @ block_f @ _DCT_MAT.T
+
+
+def _block_idct_numpy(coeffs: np.ndarray) -> np.ndarray:
+    block = _DCT_MAT.T @ coeffs.astype(np.float64) @ _DCT_MAT + 128.0
+    return np.clip(block, 0, 255)
+
+
+def _block_dct_fast(block: np.ndarray) -> np.ndarray:
+    """OpenCV 加速版 DCT，数值等价于朴素实现。"""
+    # OpenCV 期望 float32，先减 128 保持对称
+    return cv2.dct(block.astype(np.float32) - 128.0)
+
+
+def _block_idct_fast(coeffs: np.ndarray) -> np.ndarray:
+    """OpenCV 加速版 IDCT，输出裁剪到 [0,255]。"""
+    block = cv2.idct(coeffs.astype(np.float32)) + 128.0
+    return np.clip(block, 0, 255)
+
+
+# 根据环境变量优先级决定后端，默认使用 NumPy 版以贴近原文（同时避免 OpenCV 的极小斜率）。
+_BACKEND_ENV = os.getenv("FINGERCHAIN_DCT_BACKEND", "").lower()
+if _BACKEND_ENV == "naive":
+    _block_dct = _block_dct_naive
+    _block_idct = _block_idct_naive
+elif _BACKEND_ENV == "opencv" and _HAS_CV2:
+    _block_dct = _block_dct_fast
+    _block_idct = _block_idct_fast
+# 默认改为朴素后端，贴近论文未优化实现；可通过环境变量切换。
+elif _BACKEND_ENV == "numpy":
+    _block_dct = _block_dct_numpy
+    _block_idct = _block_idct_numpy
+    _BACKEND_USED = "numpy"
+elif _BACKEND_ENV == "":
+    _block_dct = _block_dct_naive
+    _block_idct = _block_idct_naive
+    _BACKEND_USED = "naive"
+else:
+    # 默认回退：有 OpenCV 用 OpenCV，否则朴素
+    if _HAS_CV2:
+        _block_dct = _block_dct_fast
+        _block_idct = _block_idct_fast
+        _BACKEND_USED = "opencv"
+    else:
+        _block_dct = _block_dct_naive
+        _block_idct = _block_idct_naive
+        _BACKEND_USED = "naive"
 
 
 @dataclass

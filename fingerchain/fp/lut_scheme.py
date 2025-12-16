@@ -16,7 +16,8 @@ from fingerchain.crypto.paillier import (
 )
 from fingerchain.media.dct import DCTVectorBundle, image_to_coeff_bundle
 
-SCALE = 1 << 7  # 量化因子，略小的 SCALE 能降低嵌入能量
+# 论文中给出量化因子为 2^10（用于把浮点映射到整数后做 Paillier 同态运算）
+SCALE = 1 << 10
 
 
 def generate_e_lut(length: int, sigma_e: float, rng: np.random.Generator | None = None) -> np.ndarray:
@@ -114,12 +115,22 @@ def owner_encrypt_media(
     e_lut: np.ndarray,
     seed: bytes,
     fanout: int,
+    precomputed: tuple[np.ndarray, DCTVectorBundle] | None = None,
+    precomputed_dct_time: float | None = None,
 ) -> MediaEncryptionResult:
-    """Owner 侧：把图像转换到 DCT 向量并执行 Eq.(3) 的加密。"""
+    """Owner 侧：把图像转换到 DCT 向量并执行 Eq.(3) 的加密。
+
+    precomputed: 可选的 (coeff_vector, bundle)，用于避免重复 DCT。
+    """
     t_total0 = time.perf_counter()
-    t_dct0 = time.perf_counter()
-    coeff_vector, bundle = image_to_coeff_bundle(image)
-    t_dct1 = time.perf_counter()
+    if precomputed is None:
+        t_dct0 = time.perf_counter()
+        coeff_vector, bundle = image_to_coeff_bundle(image)
+        t_dct1 = time.perf_counter()
+        dct_time = t_dct1 - t_dct0
+    else:
+        coeff_vector, bundle = precomputed
+        dct_time = precomputed_dct_time if precomputed_dct_time is not None else 0.0
     t_sample0 = time.perf_counter()
     positions = sample_positions(seed, len(coeff_vector), len(e_lut), fanout)
     t_sample1 = time.perf_counter()
@@ -127,10 +138,11 @@ def owner_encrypt_media(
     encrypted_coeffs = apply_positions(coeff_vector, e_lut, positions, mask=bundle.mask)
     t_lut1 = time.perf_counter()
     t_total1 = time.perf_counter()
-    dct_time = t_dct1 - t_dct0
     sample_time = t_sample1 - t_sample0
     lut_time = t_lut1 - t_lut0
-    total_time = t_total1 - t_total0
+    raw_total = t_total1 - t_total0
+    # 如果 DCT 在函数外部预计算，则 raw_total 不包含 DCT 时间，需要显式加回；否则不要重复计入。
+    total_time = raw_total + (dct_time if precomputed is not None else 0.0)
     tracked = dct_time + sample_time + lut_time
     print(
         f"[owner] DCT: {dct_time:.6f}s | B_m sampling: {sample_time:.6f}s | LUT add: {lut_time:.6f}s | total: {total_time:.6f}s"
