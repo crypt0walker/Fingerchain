@@ -41,32 +41,31 @@ ANCHOR_L_BITS = 128
 ANCHOR_T_LUT = 1000
 ANCHOR_S_FANOUT = 3
 
-# edge=512
-_A512 = {
-    "edge": 512,
-    "owner_dct": 4.327983,
-    "owner_bm": 1.050708,
-    "owner_lutadd": 0.004449,
-    "owner_o6_pack": 0.000554,
-    "owner_o5": 62.569775,
-    "user_u1": 3.831313,
-    "user_u2": 11.840344,
-    "user_u3_lutadd": 0.004942,
-    "user_u4_idct": 4.249163,
+# 优化后锚点（OpenCV DCT/IDCT + 优化 Bm 采样），edge=1024/2048
+_A1024 = {
+    "edge": 1024,
+    "owner_dct": 0.061764,
+    "owner_bm": 1.306273,
+    "owner_lutadd": 0.020504,
+    "owner_o6_pack": 0.002625,
+    "owner_o5": 71.174200,
+    "user_u1": 3.461250,
+    "user_u2": 14.387707,
+    "user_u3_lutadd": 0.037424,
+    "user_u4_idct": 0.193240,
 }
 
-# edge=2048
 _A2048 = {
     "edge": 2048,
-    "owner_dct": 97.925671,
-    "owner_bm": 34.098639,
-    "owner_lutadd": 0.413377,
-    "owner_o6_pack": 0.030799,
-    "owner_o5": 126.560626,
-    "user_u1": 4.303380,
-    "user_u2": 17.421430,
-    "user_u3_lutadd": 0.389395,
-    "user_u4_idct": 90.684507,
+    "owner_dct": 0.210309,
+    "owner_bm": 5.503587,
+    "owner_lutadd": 0.130263,
+    "owner_o6_pack": 0.017941,
+    "owner_o5": 81.808862,
+    "user_u1": 3.622633,
+    "user_u2": 15.199143,
+    "user_u3_lutadd": 0.147513,
+    "user_u4_idct": 0.363681,
 }
 
 
@@ -83,17 +82,16 @@ def _log2_ratio(x: float, base: float) -> float:
     return math.log(max(x / base, 1.0), 2)
 
 
-def _fit_linear_log(anchor_small: Tuple[float, float], anchor_big: Tuple[float, float], base_x: float) -> Tuple[float, float]:
-    """拟合 time = k*x*(1 + a*log2(x/base_x))，返回 (k, a)。"""
+def _fit_affine(anchor_small: Tuple[float, float], anchor_big: Tuple[float, float]) -> Tuple[float, float]:
+    """拟合 time = base + k*x，返回 (base, k)。"""
     x0, t0 = anchor_small
     x1, t1 = anchor_big
-    k = t0 / x0
-    r = _log2_ratio(x1, base_x)
-    if r == 0:
-        return k, 0.0
-    # t1 = k*x1*(1 + a*r)
-    a = (t1 / (k * x1) - 1.0) / r
-    return k, a
+    if x1 == x0:
+        return max(t0, 0.0), 0.0
+    k = (t1 - t0) / (x1 - x0)
+    base = t0 - k * x0
+    # 防止在小尺度外推时出现负值
+    return max(base, 0.0), max(k, 0.0)
 
 
 def _fit_power(anchor_small: Tuple[float, float], anchor_big: Tuple[float, float]) -> float:
@@ -103,24 +101,24 @@ def _fit_power(anchor_small: Tuple[float, float], anchor_big: Tuple[float, float
     return math.log(t1 / t0) / math.log(x1 / x0)
 
 
-# 基于锚点拟合：DCT/IDCT/Bm 近似线性但常数随规模变差（用 log 项模拟）
-_B512 = blocks(_A512["edge"])
+# 基于锚点拟合：优化后 DCT/IDCT/Bm 更接近“线性 + 常数”
+_B1024 = blocks(_A1024["edge"])
 _B2048 = blocks(_A2048["edge"])
-
-_KDCT, _ADCT = _fit_linear_log((_B512, _A512["owner_dct"]), (_B2048, _A2048["owner_dct"]), _B512)
-_KIDCT, _AIDCT = _fit_linear_log((_B512, _A512["user_u4_idct"]), (_B2048, _A2048["user_u4_idct"]), _B512)
-_KBM, _ABM = _fit_linear_log((_B512, _A512["owner_bm"]), (_B2048, _A2048["owner_bm"]), _B512)
-
-# LUT add 更像内存带宽/大数组索引的“超线性”退化：用幂律拟合
-_C512 = coeffs(_A512["edge"])
+_C1024 = coeffs(_A1024["edge"])
 _C2048 = coeffs(_A2048["edge"])
-_PLUT = _fit_power((_C512, _A512["owner_lutadd"]), (_C2048, _A2048["owner_lutadd"]))
-_K_LUTADD = _A512["owner_lutadd"] / (_C512 ** _PLUT)
 
-# 打包/序列化：与 payload bytes 近似线性，但大 payload 下常数变差（log 项）
-_PAY512 = 20 * coeffs(_A512["edge"])  # float64(8B)+positions(int32*fanout=12B) = 20B per coeff
+_DCT_BASE, _DCT_K = _fit_affine((_B1024, _A1024["owner_dct"]), (_B2048, _A2048["owner_dct"]))
+_IDCT_BASE, _IDCT_K = _fit_affine((_B1024, _A1024["user_u4_idct"]), (_B2048, _A2048["user_u4_idct"]))
+_BM_BASE, _BM_K = _fit_affine((_C1024, _A1024["owner_bm"]), (_C2048, _A2048["owner_bm"]))
+
+# LUT add：仍用幂律拟合（大数组索引/带宽会带来轻微超线性）
+_PLUT = _fit_power((_C1024, _A1024["owner_lutadd"]), (_C2048, _A2048["owner_lutadd"]))
+_K_LUTADD = _A1024["owner_lutadd"] / (_C1024 ** _PLUT)
+
+# 打包/序列化：payload bytes 近似线性（优化后更接近线性 + 常数）
+_PAY1024 = 20 * coeffs(_A1024["edge"])  # float64(8B)+positions(int32*fanout=12B) = 20B per coeff
 _PAY2048 = 20 * coeffs(_A2048["edge"])
-_KPACK, _APACK = _fit_linear_log((_PAY512, _A512["owner_o6_pack"]), (_PAY2048, _A2048["owner_o6_pack"]), _PAY512)
+_PACK_BASE, _PACK_K = _fit_affine((_PAY1024, _A1024["owner_o6_pack"]), (_PAY2048, _A2048["owner_o6_pack"]))
 
 
 def _hash01(*parts: object) -> float:
@@ -142,22 +140,45 @@ def thermal_slowdown(dct_time_s: float, strength: float) -> float:
     return 1.0 + strength * x
 
 
+def _fit_pre_slowdown(pre1: float, v1: float, pre2: float, v2: float) -> Tuple[float, float]:
+    """拟合 v = base * (1 + a*pre)，返回 (base, a)。"""
+    if v1 <= 0 or v2 <= 0:
+        return max(v1, 0.0), 0.0
+    r = v2 / v1
+    denom = pre2 - r * pre1
+    if denom <= 1e-9:
+        return v1, 0.0
+    a = (r - 1.0) / denom
+    if a < 0:
+        a = 0.0
+    base = v1 / (1.0 + a * pre1) if (1.0 + a * pre1) > 0 else v1
+    return base, a
+
+
+# 以 owner 侧“前置线性开销”作为热/资源竞争 proxy（优化后更贴近现实）
+_PRE1024 = _A1024["owner_dct"] + _A1024["owner_bm"] + _A1024["owner_lutadd"]
+_PRE2048 = _A2048["owner_dct"] + _A2048["owner_bm"] + _A2048["owner_lutadd"]
+_O5_BASE, _O5_A = _fit_pre_slowdown(_PRE1024, _A1024["owner_o5"], _PRE2048, _A2048["owner_o5"])
+_U1_BASE, _U1_A = _fit_pre_slowdown(_PRE1024, _A1024["user_u1"], _PRE2048, _A2048["user_u1"])
+_U2_BASE, _U2_A = _fit_pre_slowdown(_PRE1024, _A1024["user_u2"], _PRE2048, _A2048["user_u2"])
+
+
 def model_dct(edge: int, trial_key: str) -> float:
     b = blocks(edge)
-    t = _KDCT * b * (1.0 + _ADCT * _log2_ratio(b, _B512))
-    return t * jitter(f"dct|{trial_key}", 0.04)
+    t = _DCT_BASE + _DCT_K * b
+    return t * jitter(f"dct|{trial_key}", 0.06)
 
 
 def model_idct(edge: int, trial_key: str) -> float:
     b = blocks(edge)
-    t = _KIDCT * b * (1.0 + _AIDCT * _log2_ratio(b, _B512))
-    return t * jitter(f"idct|{trial_key}", 0.04)
+    t = _IDCT_BASE + _IDCT_K * b
+    return t * jitter(f"idct|{trial_key}", 0.06)
 
 
 def model_bm_sampling(edge: int, trial_key: str) -> float:
-    b = blocks(edge)
-    t = _KBM * b * (1.0 + _ABM * _log2_ratio(b, _B512))
-    return t * jitter(f"bm|{trial_key}", 0.06)
+    c = coeffs(edge)
+    t = _BM_BASE + _BM_K * c
+    return t * jitter(f"bm|{trial_key}", 0.08)
 
 
 def model_lut_add(edge: int, trial_key: str) -> float:
@@ -168,8 +189,8 @@ def model_lut_add(edge: int, trial_key: str) -> float:
 
 def model_pack_media(edge: int, trial_key: str) -> float:
     payload = 20 * coeffs(edge)
-    t = _KPACK * payload * (1.0 + _APACK * _log2_ratio(payload, _PAY512))
-    return t * jitter(f"pack|{trial_key}", 0.05)
+    t = _PACK_BASE + _PACK_K * payload
+    return t * jitter(f"pack|{trial_key}", 0.06)
 
 
 def model_elut_gen(trial_key: str) -> float:
@@ -190,22 +211,24 @@ def model_g_gen(l_bits: int, trial_key: str) -> float:
 
 
 def model_o5_compute_dlut(l_bits: int, edge: int, dct_time: float, trial_key: str) -> float:
-    # 理论上与 edge 无关；但现实上会受热降频影响（长 DCT 后更慢）。
-    base = _A512["owner_o5"] * (l_bits / ANCHOR_L_BITS)
-    t = base * thermal_slowdown(dct_time, strength=1.05)
-    return t * jitter(f"o5|{trial_key}", 0.10)
+    # 理论上与 edge 无关；但现实上会受“前置 CPU 负载/热”影响（大媒体导致更慢）。
+    base = _O5_BASE * (l_bits / ANCHOR_L_BITS)
+    pre = model_dct(edge, f"pre|{trial_key}") + model_bm_sampling(edge, f"pre|{trial_key}") + model_lut_add(edge, f"pre|{trial_key}")
+    t = base * (1.0 + _O5_A * pre)
+    return t * jitter(f"o5|{trial_key}", 0.08)
 
 
 def model_u1_encrypt(l_bits: int, edge: int, dct_time: float, trial_key: str) -> float:
-    base = _A512["user_u1"] * (l_bits / ANCHOR_L_BITS)
-    t = base * thermal_slowdown(dct_time, strength=0.12)
+    base = _U1_BASE * (l_bits / ANCHOR_L_BITS)
+    pre = model_dct(edge, f"preu|{trial_key}") + model_bm_sampling(edge, f"preu|{trial_key}") + model_lut_add(edge, f"preu|{trial_key}")
+    t = base * (1.0 + _U1_A * pre)
     return t * jitter(f"u1|{trial_key}", 0.08)
 
 
 def model_u2_decrypt(edge: int, dct_time: float, trial_key: str) -> float:
-    base = _A512["user_u2"]
-    t = base * thermal_slowdown(dct_time, strength=0.50)
-    return t * jitter(f"u2|{trial_key}", 0.10)
+    pre = model_dct(edge, f"preu2|{trial_key}") + model_bm_sampling(edge, f"preu2|{trial_key}") + model_lut_add(edge, f"preu2|{trial_key}")
+    t = _U2_BASE * (1.0 + _U2_A * pre)
+    return t * jitter(f"u2|{trial_key}", 0.08)
 
 
 def simulate_once(edge: int, l_bits: int, users: int, trial: int) -> Tuple[float, float, float]:

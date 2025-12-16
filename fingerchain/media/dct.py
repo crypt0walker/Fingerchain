@@ -99,7 +99,7 @@ def _block_idct_fast(coeffs: np.ndarray) -> np.ndarray:
     return np.clip(block, 0, 255)
 
 
-# 根据环境变量优先级决定后端，默认使用 NumPy 版以贴近原文（同时避免 OpenCV 的极小斜率）。
+# 根据环境变量优先级决定后端，默认使用 OpenCV（若可用）以获得最快路径；可通过环境变量覆盖。
 _BACKEND_ENV = os.getenv("FINGERCHAIN_DCT_BACKEND", "").lower()
 if _BACKEND_ENV == "naive":
     _block_dct = _block_dct_naive
@@ -107,15 +107,19 @@ if _BACKEND_ENV == "naive":
 elif _BACKEND_ENV == "opencv" and _HAS_CV2:
     _block_dct = _block_dct_fast
     _block_idct = _block_idct_fast
-# 默认改为朴素后端，贴近论文未优化实现；可通过环境变量切换。
 elif _BACKEND_ENV == "numpy":
     _block_dct = _block_dct_numpy
     _block_idct = _block_idct_numpy
     _BACKEND_USED = "numpy"
 elif _BACKEND_ENV == "":
-    _block_dct = _block_dct_naive
-    _block_idct = _block_idct_naive
-    _BACKEND_USED = "naive"
+    if _HAS_CV2:
+        _block_dct = _block_dct_fast
+        _block_idct = _block_idct_fast
+        _BACKEND_USED = "opencv"
+    else:
+        _block_dct = _block_dct_numpy
+        _block_idct = _block_idct_numpy
+        _BACKEND_USED = "numpy"
 else:
     # 默认回退：有 OpenCV 用 OpenCV，否则朴素
     if _HAS_CV2:

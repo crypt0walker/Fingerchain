@@ -4,17 +4,17 @@
 <line x1="70" y1="40" x2="70" y2="400" stroke="black"/>
 <line x1="70" y1="400" x2="795" y2="400" stroke="black"/>
 <line x1="70" y1="400.0" x2="795" y2="400.0" stroke="#e6e6e6"/>
-<text x="62" y="403.0" text-anchor="end" font-size="10" font-family="Arial">871</text>
+<text x="62" y="403.0" text-anchor="end" font-size="10" font-family="Arial">447</text>
 <line x1="70" y1="328.0" x2="795" y2="328.0" stroke="#e6e6e6"/>
-<text x="62" y="331.0" text-anchor="end" font-size="10" font-family="Arial">1910</text>
+<text x="62" y="331.0" text-anchor="end" font-size="10" font-family="Arial">1052</text>
 <line x1="70" y1="256.0" x2="795" y2="256.0" stroke="#e6e6e6"/>
-<text x="62" y="259.0" text-anchor="end" font-size="10" font-family="Arial">2949</text>
+<text x="62" y="259.0" text-anchor="end" font-size="10" font-family="Arial">1657</text>
 <line x1="70" y1="184.0" x2="795" y2="184.0" stroke="#e6e6e6"/>
-<text x="62" y="187.0" text-anchor="end" font-size="10" font-family="Arial">3988</text>
-<line x1="70" y1="112.0" x2="795" y2="112.0" stroke="#e6e6e6"/>
-<text x="62" y="115.0" text-anchor="end" font-size="10" font-family="Arial">5026</text>
+<text x="62" y="187.0" text-anchor="end" font-size="10" font-family="Arial">2262</text>
+<line x1="70" y1="111.99999999999994" x2="795" y2="111.99999999999994" stroke="#e6e6e6"/>
+<text x="62" y="114.99999999999994" text-anchor="end" font-size="10" font-family="Arial">2867</text>
 <line x1="70" y1="40.0" x2="795" y2="40.0" stroke="#e6e6e6"/>
-<text x="62" y="43.0" text-anchor="end" font-size="10" font-family="Arial">6065</text>
+<text x="62" y="43.0" text-anchor="end" font-size="10" font-family="Arial">3472</text>
 <line x1="70.0" y1="400" x2="70.0" y2="404" stroke="black"/>
 <text x="70.0" y="418" text-anchor="middle" font-size="10" font-family="Arial">5</text>
 <line x1="173.57142857142856" y1="400" x2="173.57142857142856" y2="404" stroke="black"/>
@@ -33,14 +33,14 @@
 <text x="795.0" y="418" text-anchor="middle" font-size="10" font-family="Arial">40</text>
 <text x="432.5" y="450" text-anchor="middle" font-size="12" font-family="Arial">User count</text>
 <text x="18" y="220.0" transform="rotate(-90 18 220.0)" text-anchor="middle" font-size="12" font-family="Arial">time (s)</text>
-<path d="M 70.00 400.00 L 173.57 350.02 L 277.14 300.29 L 380.71 248.20 L 484.29 199.47 L 587.86 145.50 L 691.43 94.11 L 795.00 40.00" fill="none" stroke="#1f77b4" stroke-width="2"/>
+<path d="M 70.00 400.00 L 173.57 349.70 L 277.14 299.06 L 380.71 249.99 L 484.29 201.83 L 587.86 142.48 L 691.43 93.42 L 795.00 40.00" fill="none" stroke="#1f77b4" stroke-width="2"/>
 <circle cx="70.00" cy="400.00" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
-<circle cx="173.57" cy="350.02" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
-<circle cx="277.14" cy="300.29" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
-<circle cx="380.71" cy="248.20" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
-<circle cx="484.29" cy="199.47" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
-<circle cx="587.86" cy="145.50" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
-<circle cx="691.43" cy="94.11" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
+<circle cx="173.57" cy="349.70" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
+<circle cx="277.14" cy="299.06" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
+<circle cx="380.71" cy="249.99" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
+<circle cx="484.29" cy="201.83" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
+<circle cx="587.86" cy="142.48" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
+<circle cx="691.43" cy="93.42" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
 <circle cx="795.00" cy="40.00" r="3" fill="#1f77b4" stroke="white" stroke-width="1"/>
 <rect x="625" y="41" width="12" height="12" fill="#1f77b4"/>
 <text x="643" y="51" font-size="10" font-family="Arial">CP_FC</text>

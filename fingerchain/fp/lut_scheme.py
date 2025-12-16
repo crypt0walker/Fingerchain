@@ -72,11 +72,37 @@ def _hash_seed(seed: bytes | bytearray | str) -> int:
 
 
 def sample_positions(seed: bytes | bytearray | str, length: int, lut_size: int, fanout: int) -> np.ndarray:
-    """由会话种子伪随机采样稀疏矩阵 B_m 中每行的非零位置。"""
+    """由会话种子伪随机采样稀疏矩阵 B_m 中每行的非零位置，避免每行一次全量 choice 的高开销。
+
+    策略：先用 replace=True 的批量整数生成，再对每行做轻量去重补全（fanout 很小，通常 2~3）。
+    在 fanout≪lut_size 时，比逐行 choice(replace=False) 更快。
+    """
     rng = np.random.default_rng(_hash_seed(seed))
-    positions = np.empty((length, fanout), dtype=np.int32)
-    for idx in range(length):
-        positions[idx] = rng.choice(lut_size, size=fanout, replace=False)
+    if fanout <= 0 or lut_size <= 0:
+        raise ValueError("fanout and lut_size must be positive")
+    raw = rng.integers(lut_size, size=(length, fanout), dtype=np.int32)
+    if fanout == 1:
+        return raw
+    positions = np.empty_like(raw)
+    for i in range(length):
+        row = raw[i]
+        seen = set()
+        out = []
+        for val in row:
+            if val in seen:
+                continue
+            seen.add(int(val))
+            out.append(int(val))
+            if len(out) == fanout:
+                break
+        # 若有冲突，补充随机值直到凑够 fanout
+        while len(out) < fanout:
+            val = int(rng.integers(lut_size, dtype=np.int32))
+            if val in seen:
+                continue
+            seen.add(val)
+            out.append(val)
+        positions[i] = out
     return positions
 
 
